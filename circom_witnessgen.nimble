@@ -1,4 +1,4 @@
-version     = "0.1.3"
+version     = "0.1.4"
 author      = "Balazs Komuves"
 description = "Witness generation for circom circuits"
 license     = "MIT OR Apache-2.0"
