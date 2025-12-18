@@ -5,4 +5,4 @@ license     = "MIT OR Apache-2.0"
 
 bin = @["main"]
 
-requires "constantine >= 0.2.0"
+requires "https://github.com/durability-labs/constantine#v0.2.0-fix-nimble-windows"
