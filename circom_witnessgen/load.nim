@@ -21,7 +21,7 @@ proc parseVarUint32(buf: openArray[byte], p: var int): uint32 =
 proc parseVarInt(buf: openArray[byte], p: var int): int =
   return int( parseVarUint64(buf,p) )
 
-proc parseUint64(buf: openArray[byte], p: var int): uint64 = 
+proc parseUint64(buf: openArray[byte], p: var int): uint64 =
   var x: uint64 = 0
   for i in 0..<8:
     x += uint64(buf[p+i]) shl (i*8)
@@ -35,7 +35,7 @@ const SGROUP : byte = 3
 const EGROUP : byte = 4
 const I32    : byte = 5
 
-proc parseProtoField(buf: openArray[byte], p: var int, expected: byte): int = 
+proc parseProtoField(buf: openArray[byte], p: var int, expected: byte): int =
   let b = buf[p]
   p = p+1
   let wire = bitand(b,7)
@@ -51,7 +51,7 @@ proc leBytesToHex(bytes: openArray[byte]): string =
 
 #-------------------------------------------------------------------------------
 
-proc parseGenericNode(buf: openArray[byte]): seq[uint32] = 
+proc parseGenericNode(buf: openArray[byte]): seq[uint32] =
   let l = buf.len
   var p = 0
   var values: seq[uint32] = newSeq[uint32](5)
@@ -126,7 +126,7 @@ proc parseNode(buf: openArray[byte], p: var int): Node[uint32] =
 
 #-------------------------------------------------------------------------------
 
-proc parseWitnessMapping(buf: openArray[byte], p: var int): seq[uint32] = 
+proc parseWitnessMapping(buf: openArray[byte], p: var int): seq[uint32] =
 
   let fld = buf.parseProtoField(p, LEN)
   assert( fld == 1 , "expecting protobuf field id 1")
@@ -141,13 +141,13 @@ proc parseWitnessMapping(buf: openArray[byte], p: var int): seq[uint32] =
   p = nextp;
   return list
 
-proc parseSignalDescription(buf: openArray[byte], p: var int): SignalDescription = 
+proc parseSignalDescription(buf: openArray[byte], p: var int): SignalDescription =
 
   let fld = buf.parseProtoField(p, LEN)
   assert( fld == 2 , "expecting protobuf field id 2")
   let ln  = buf.parseVarInt(p)
   let nextp = p + ln
- 
+
   var xofs: uint32 = 0
   var xlen: uint32 = 0
 
@@ -164,7 +164,7 @@ proc parseSignalDescription(buf: openArray[byte], p: var int): SignalDescription
 
 proc bytesToString(bytes: openarray[byte]): string =
   result = newString(bytes.len)
-  copyMem(result[0].addr, bytes[0].unsafeAddr, bytes.len)  
+  copyMem(result[0].addr, bytes[0].unsafeAddr, bytes.len)
 
 proc parseSignalName(buf: openArray[byte], p: var int): string=
 
@@ -178,7 +178,7 @@ proc parseSignalName(buf: openArray[byte], p: var int): string=
 
   p = nextp1
   return name
-    
+
 proc parseCircuitInput(buf: openArray[byte], p: var int): (string, SignalDescription) =
 
   let fld = buf.parseProtoField(p, LEN)
@@ -195,7 +195,7 @@ proc parseCircuitInput(buf: openArray[byte], p: var int): (string, SignalDescrip
   p = nextp
   return (name,desc)
 
-proc parsePrime(buf: openArray[byte], p: var int): Prime = 
+proc parsePrime(buf: openArray[byte], p: var int): Prime =
 
   # prime number (BigUInt)
   let fld1 = buf.parseProtoField(p, LEN)
@@ -219,10 +219,10 @@ proc parsePrime(buf: openArray[byte], p: var int): Prime =
   let bs = buf[p..<p+len2]
   let name = bytesToString(bs)
   p = nextp2
- 
+
   return Prime(primeNumber: number, primeName: name)
 
-proc parseMeta(buf: openArray[byte]): GraphMetaData = 
+proc parseMeta(buf: openArray[byte]): GraphMetaData =
   var p: int = 0
 
   let mapping = buf.parseWitnessMapping(p)
@@ -232,16 +232,17 @@ proc parseMeta(buf: openArray[byte]): GraphMetaData =
     let entry = buf.parseCircuitInput(p)
     entries.add(entry)
 
+  doAssert(p < buf.len, "metadata section missing prime field")
   let prime = buf.parsePrime(p)
 
   return GraphMetaData(witnessMapping: WitnessMapping(mapping: mapping), inputSignals: entries, prime: prime)
 
 #-------------------------------------------------------------------------------
 
-proc parseGraph*(buf: openArray[byte]): Graph = 
+proc parseGraph*(buf: openArray[byte]): Graph =
   var p: int = 0
 
-  let magic  = "wtns.graph.001" 
+  let magic  = "wtns.graph.001"
   for i in 0..<magic.len:
     assert( ord(magic[i]) == int(buf[i]) , "invalid magic string" )
   p += magic.len
